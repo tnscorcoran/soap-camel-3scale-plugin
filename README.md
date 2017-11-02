@@ -1,0 +1,1 @@
+# soap-camel-3scale-plugin
