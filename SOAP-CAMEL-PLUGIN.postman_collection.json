@@ -1,0 +1,74 @@
+{
+	"info": {
+		"name": "SOAP-CAMEL-PLUGIN",
+		"_postman_id": "864048f8-377d-a145-8fdf-cfad5a843eae",
+		"description": "",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "sync-plugin",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "user_key",
+						"value": "41af4a009f90752f4182884916da462a"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" \n                  xmlns:rep=\"http://reportincident.example.camel.apache.org\">\n   <soapenv:Header/>\n   <soapenv:Body>\n      <rep:inputReportIncident>\n         <incidentId></incidentId>\n         <incidentDate>2011-11-18</incidentDate>\n         <givenName>Bob</givenName>\n         <familyName>Smith</familyName>\n         <summary>Bla bla</summary>\n         <details>More bla</details>\n         <email>davsclaus@apache.org</email>\n         <phone>12345678</phone>\n      </rep:inputReportIncident>\n   </soapenv:Body>\n</soapenv:Envelope>\n"
+				},
+				"url": {
+					"raw": "http://localhost:9080/camel-example-cxf-proxy/webservices/managed-sync/incident",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9080",
+					"path": [
+						"camel-example-cxf-proxy",
+						"webservices",
+						"managed-sync",
+						"incident"
+					]
+				},
+				"description": "soap-local-plugin-localhost"
+			},
+			"response": []
+		},
+		{
+			"name": "async-plugin",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "user_key",
+						"value": "41af4a009f90752f4182884916da462a"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<soapenv:Envelope xmlns:soapenv=\"http://schemas.xmlsoap.org/soap/envelope/\" \n                  xmlns:rep=\"http://reportincident.example.camel.apache.org\">\n   <soapenv:Header/>\n   <soapenv:Body>\n      <rep:inputReportIncident>\n         <incidentId></incidentId>\n         <incidentDate>2011-11-18</incidentDate>\n         <givenName>Bob</givenName>\n         <familyName>Smith</familyName>\n         <summary>Bla bla</summary>\n         <details>More bla</details>\n         <email>davsclaus@apache.org</email>\n         <phone>12345678</phone>\n      </rep:inputReportIncident>\n   </soapenv:Body>\n</soapenv:Envelope>\n"
+				},
+				"url": {
+					"raw": "http://localhost:9080/camel-example-cxf-proxy/webservices/managed-async/incident",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9080",
+					"path": [
+						"camel-example-cxf-proxy",
+						"webservices",
+						"managed-async",
+						"incident"
+					]
+				},
+				"description": "soap-local-plugin-localhost"
+			},
+			"response": []
+		}
+	]
+}

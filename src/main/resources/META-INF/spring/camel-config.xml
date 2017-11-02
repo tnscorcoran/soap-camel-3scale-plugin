@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:camel="http://camel.apache.org/schema/spring" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:cxf="http://camel.apache.org/schema/cxf" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd        http://camel.apache.org/schema/cxf http://camel.apache.org/schema/cxf/camel-cxf.xsd">
+	<!-- spring property placeholder, ignore resource not found as the file 
+		resource is for unit testing -->
+	<context:property-placeholder
+		ignore-resource-not-found="true"
+		location="classpath:incident.properties,file:target/custom.properties" />
+	<!-- Use a bean to start and stop the real web service (is not Camel specific) -->
+	<!-- In a real use-case the real web service would be probably located on 
+		another server but we simulate this in the same JVM -->
+	
+	<bean class="org.apache.camel.example.cxf.proxy.RealWebServiceBean"
+		destroy-method="stop" id="realWebService" init-method="start">
+		<!-- url of the real web service we have proxied -->
+		<property name="url"
+			value="http://localhost:${real.port}/real-webservice" />
+	</bean>
+	
+	
+	<bean class="net.threescale.service.PluginServiceImpl" id="pluginService" />
+	
+	
+	<!-- bean that enriches the SOAP request -->
+	<bean class="org.apache.camel.example.cxf.proxy.EnrichBean" id="enrichBean" />
+
+	<!-- Threescale Plugin Client-->
+	<bean class="org.apache.camel.example.cxf.proxy.ThreescalePluginBean" id="threescalePluginBean">
+		<property name="serviceToken" value="d5e524f12b4e0d0eef95ccc73d9d82d227011f07596c5187860ce8a8ff2c20cb" />
+		<property name="serviceID" value="2555417748510" />
+	</bean>
+	
+	<!-- Threescale Plugin Wrapper Client-->
+	<bean class="org.apache.camel.example.cxf.proxy.ThreescalePluginWrapperBean" id="threescalePluginWrapperBean">
+		<property name="pluginService" ref="pluginService" />
+	</bean>
+	
+	<!-- CACHING and ASYNCHRONOUS WRAPPER around the Threescale Plugin -->
+	<bean class="net.threescale.service.PluginServiceImpl" id="threescalePluginWRAPPERBean" />
+	
+	
+	<!-- this is the CXF web service we use as the front end *** MANAGED BY THE 3SCALE PLUGIN-->
+	<cxf:cxfEndpoint
+		address="http://localhost:${proxy.port}/camel-example-cxf-proxy/webservices/managed-sync/incident"
+		endpointName="s:ReportIncidentEndpoint" id="reportIncident-managed-sync"
+		serviceName="s:ReportIncidentEndpointService" wsdlURL="etc/report_incident.wsdl"
+		xmlns:s="http://reportincident.example.camel.apache.org" />
+	<!-- this is the Camel route which proxies the real web service and forwards 
+		SOAP requests to it -->
+	<camelContext id="cxf-proxy" xmlns="http://camel.apache.org/schema/spring">
+		<!-- property which contains port number -->
+		<propertyPlaceholder id="properties"
+			location="classpath:incident.properties,file:target/custom.properties" />
+		<endpoint id="callRealWebService"
+			uri="http://localhost:${real.port}/real-webservice?throwExceptionOnFailure=false" />
+
+		<route id="soap_proxy">
+			<!-- threescale plugin for authorization -->
+			<from id="_from1" uri="cxf:bean:reportIncident-managed-sync?dataFormat=MESSAGE" />
+			<to id="api_filter" uri="bean:threescalePluginBean?method=process" />
+			<!-- enrich the input by ensure the incidentId parameter is set -->
+			<to id="_to1" uri="log:input" />
+			<to id="_to2" uri="bean:enrichBean" />
+			<removeHeaders id="_removeHeaders1" pattern="CamelHttp*" />
+			<to id="_to3" uri="callRealWebService" />
+			<to id="_to4" uri="log:output" />
+		</route>
+	</camelContext>
+
+
+
+	
+	<!-- this is the CXF web service we use as the front end *** MANAGED BY THE ASYNC 3SCALE PLUGIN  ** WRAPPER** -->
+	<cxf:cxfEndpoint
+		address="http://localhost:${proxy.port}/camel-example-cxf-proxy/webservices/managed-async/incident"
+		endpointName="s:ReportIncidentEndpoint" id="reportIncident-managed-async"
+		serviceName="s:ReportIncidentEndpointService" wsdlURL="etc/report_incident.wsdl"
+		xmlns:s="http://reportincident.example.camel.apache.org" />
+	<!-- this is the Camel route which proxies the real web service and forwards 
+		SOAP requests to it -->
+	<camelContext id="cxf-proxy-async" xmlns="http://camel.apache.org/schema/spring">
+		<!-- property which contains port number -->
+		<propertyPlaceholder id="properties2"
+			location="classpath:incident.properties,file:target/custom.properties" />
+		<endpoint id="callRealWebService2"
+			uri="http://localhost:${real.port}/real-webservice?throwExceptionOnFailure=false" />
+
+		<route id="soap_proxy_async_managed">
+			<!-- threescale plugin for authorization -->
+			<from id="_from1" uri="cxf:bean:reportIncident-managed-async?dataFormat=MESSAGE" />
+			<to id="api_filter" uri="bean:threescalePluginWrapperBean?method=process" />
+			<!-- enrich the input by ensure the incidentId parameter is set -->
+			<to id="_to1" uri="log:input" />
+			<to id="_to2" uri="bean:enrichBean" />
+			<removeHeaders id="_removeHeaders1" pattern="CamelHttp*" />
+			<to id="_to3" uri="callRealWebService" />
+			<to id="_to4" uri="log:output" />
+		</route>
+	</camelContext>
+
+
+
+
+
+	<!-- this is the CXF web service we use as the front end *** MANAGED BY THE 3SCALE PLUGIN-->
+
+
+
+
+	
+</beans>
